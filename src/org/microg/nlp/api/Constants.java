@@ -29,4 +29,6 @@ public class Constants {
     public static final String METADATA_BACKEND_SETTINGS_ACTIVITY = "org.microg.nlp.BACKEND_SETTINGS_ACTIVITY";
     public static final String METADATA_BACKEND_ABOUT_ACTIVITY = "org.microg.nlp.BACKEND_ABOUT_ACTIVITY";
     public static final String METADATA_BACKEND_SUMMARY = "org.microg.nlp.BACKEND_SUMMARY";
+    public static final String METADATA_API_VERSION = "org.microg.nlp.API_VERSION";
+    public static final String API_VERSION = "1";
 }

@@ -14,12 +14,6 @@
   ~ limitations under the License.
   -->
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.microg.nlp.api">
-
-    <application>
-        <meta-data
-            android:name="org.microg.nlp.API_VERSION"
-            android:value="@string/nlp_api_version" />
-    </application>
-</manifest>
+<resources>
+    <string name="nlp_api_version">1</string>
+</resources>
