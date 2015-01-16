@@ -42,4 +42,12 @@ public abstract class AbstractBackendService extends Service {
     }
 
     protected abstract IBinder getBackend();
+
+    protected String getServiceApiVersion() {
+        return VersionUtil.getServiceApiVersion(this);
+    }
+
+    protected String getSelfApiVersion() {
+        return VersionUtil.getSelfApiVersion(this);
+    }
 }
