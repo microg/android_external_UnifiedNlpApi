@@ -4,6 +4,10 @@ local.properties
 build.xml
 proguard-project.txt
 
+.gradle
 build/
 gradle/
 gradlew
+
+*.iml
+.idea/
