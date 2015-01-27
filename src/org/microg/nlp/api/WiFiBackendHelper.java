@@ -72,12 +72,12 @@ public class WiFiBackendHelper {
     public void onClose() {
         if (state == State.DISABLED || state == State.DISABLING)
             throw new IllegalStateException("Do not call onClose if not opened before");
-        context.unregisterReceiver(wifiBroadcastReceiver);
         if (state == State.WAITING) {
             state = State.DISABLED;
         } else {
             state = State.DISABLING;
         }
+        context.unregisterReceiver(wifiBroadcastReceiver);
     }
 
     public void onUpdate() {
