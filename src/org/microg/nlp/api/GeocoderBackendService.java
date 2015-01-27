@@ -83,8 +83,7 @@ public abstract class GeocoderBackendService extends AbstractBackendService {
 
         @Override
         public void close() throws RemoteException {
-            onClose();
-            connected = false;
+            disconnect();
         }
     }
 }
