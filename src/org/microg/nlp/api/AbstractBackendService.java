@@ -41,6 +41,14 @@ public abstract class AbstractBackendService extends Service {
 
     }
 
+    @Override
+    public boolean onUnbind(Intent intent) {
+        disconnect();
+        return super.onUnbind(intent);
+    }
+
+    public abstract void disconnect();
+
     protected abstract IBinder getBackend();
 
     protected String getServiceApiVersion() {

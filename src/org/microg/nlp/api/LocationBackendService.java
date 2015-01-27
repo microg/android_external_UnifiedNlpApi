@@ -22,7 +22,7 @@ import android.os.RemoteException;
 
 public abstract class LocationBackendService extends AbstractBackendService {
 
-    private Backend backend = new Backend();
+    private final Backend backend = new Backend();
     private LocationCallback callback;
     private Location waiting;
 
@@ -73,6 +73,14 @@ public abstract class LocationBackendService extends AbstractBackendService {
         return backend;
     }
 
+    @Override
+    public void disconnect() {
+        if (callback != null) {
+            onClose();
+            callback = null;
+        }
+    }
+
     private class Backend extends LocationBackend.Stub {
         @Override
         public void open(LocationCallback callback) throws RemoteException {
@@ -91,8 +99,7 @@ public abstract class LocationBackendService extends AbstractBackendService {
 
         @Override
         public void close() throws RemoteException {
-            onClose();
-            callback = null;
+            disconnect();
         }
     }
 }

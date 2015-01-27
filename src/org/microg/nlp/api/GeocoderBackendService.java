@@ -24,11 +24,20 @@ import java.util.List;
 
 public abstract class GeocoderBackendService extends AbstractBackendService {
 
-    private Backend backend = new Backend();
+    private final Backend backend = new Backend();
+    private boolean connected = false;
 
     @Override
     protected IBinder getBackend() {
         return backend;
+    }
+
+    @Override
+    public void disconnect() {
+        if (connected) {
+            onClose();
+            connected = false;
+        }
     }
 
     /**
@@ -53,6 +62,7 @@ public abstract class GeocoderBackendService extends AbstractBackendService {
         @Override
         public void open() throws RemoteException {
             onOpen();
+            connected = true;
         }
 
         @Override
@@ -74,7 +84,7 @@ public abstract class GeocoderBackendService extends AbstractBackendService {
         @Override
         public void close() throws RemoteException {
             onClose();
-            backend = null;
+            connected = false;
         }
     }
 }
