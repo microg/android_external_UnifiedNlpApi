@@ -61,7 +61,7 @@ public class WiFiBackendHelper {
         this.ignoreNomap = ignoreNomap;
     }
 
-    public void onOpen() {
+    public synchronized void onOpen() {
         if (state == State.WAITING || state == State.SCANNING)
             throw new IllegalStateException("Do not call onOpen if not closed before");
         currentWiFisUsed = true;
@@ -69,7 +69,7 @@ public class WiFiBackendHelper {
         state = State.WAITING;
     }
 
-    public void onClose() {
+    public synchronized void onClose() {
         if (state == State.DISABLED || state == State.DISABLING)
             throw new IllegalStateException("Do not call onClose if not opened before");
         if (state == State.WAITING) {
@@ -80,7 +80,7 @@ public class WiFiBackendHelper {
         context.unregisterReceiver(wifiBroadcastReceiver);
     }
 
-    public void onUpdate() {
+    public synchronized void onUpdate() {
         if (!currentWiFisUsed) {
             currentWiFisUsed = true;
             listener.onWiFisChanged(wiFis);
