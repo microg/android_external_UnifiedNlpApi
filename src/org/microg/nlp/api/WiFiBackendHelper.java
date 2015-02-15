@@ -16,6 +16,7 @@
 
 package org.microg.nlp.api;
 
+import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -29,13 +30,15 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Utility class to support backends that use WiFis for location.
+ * Utility class to support backends that use Wi-Fis for geolocation.
  */
-public class WiFiBackendHelper {
-    private final Context context;
+public class WiFiBackendHelper extends AbstractBackendHelper {
+    private final static IntentFilter wifiBroadcastFilter =
+            new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+
+    private final Listener listener;
     private final WifiManager wifiManager;
-    private final static IntentFilter wifiBroadcastFilter = new IntentFilter(WifiManager
-            .SCAN_RESULTS_AVAILABLE_ACTION);
+    private final Set<WiFi> wiFis = new HashSet<>();
     private final BroadcastReceiver wifiBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -43,46 +46,56 @@ public class WiFiBackendHelper {
         }
     };
 
-    private final Set<WiFi> wiFis = new HashSet<>();
-    private final Listener listener;
-    private State state = State.DISABLED;
     private boolean ignoreNomap = true;
-    private boolean currentWiFisUsed = true;
 
+    /**
+     * Create a new instance of {@link WiFiBackendHelper}. Call this in
+     * {@link LocationBackendService#onCreate()}.
+     *
+     * @throws IllegalArgumentException if either context or listener is null.
+     */
     public WiFiBackendHelper(Context context, Listener listener) {
-        if (context == null || listener == null)
-            throw new IllegalArgumentException("context and listener must not be null");
-        this.context = context;
-        this.wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        super(context);
+        if (listener == null)
+            throw new IllegalArgumentException("listener must not be null");
         this.listener = listener;
+        this.wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
     }
 
+    /**
+     * Sets whether to ignore the "_nomap" flag on Wi-Fi SSIDs or not.
+     * <p/>
+     * Usually, Wi-Fis whose SSID end with "_nomap" are ignored for geolocation. This behaviour can
+     * be suppressed by {@code setIgnoreNomap(false)}.
+     * <p/>
+     * Default is {@code true}.
+     */
     public void setIgnoreNomap(boolean ignoreNomap) {
         this.ignoreNomap = ignoreNomap;
     }
 
+    /**
+     * Call this in {@link LocationBackendService#onOpen()}.
+     */
     public synchronized void onOpen() {
-        if (state == State.WAITING || state == State.SCANNING)
-            throw new IllegalStateException("Do not call onOpen if not closed before");
-        currentWiFisUsed = true;
+        super.onOpen();
         context.registerReceiver(wifiBroadcastReceiver, wifiBroadcastFilter);
-        state = State.WAITING;
     }
 
+    /**
+     * Call this in {@link LocationBackendService#onClose()}.
+     */
     public synchronized void onClose() {
-        if (state == State.DISABLED || state == State.DISABLING)
-            throw new IllegalStateException("Do not call onClose if not opened before");
-        if (state == State.WAITING) {
-            state = State.DISABLED;
-        } else {
-            state = State.DISABLING;
-        }
+        super.onClose();
         context.unregisterReceiver(wifiBroadcastReceiver);
     }
 
+    /**
+     * Call this in {@link LocationBackendService#update()}.
+     */
     public synchronized void onUpdate() {
-        if (!currentWiFisUsed) {
-            currentWiFisUsed = true;
+        if (!currentDataUsed) {
+            currentDataUsed = true;
             listener.onWiFisChanged(wiFis);
         } else {
             scanWiFis();
@@ -91,12 +104,12 @@ public class WiFiBackendHelper {
 
     private void onWiFisChanged() {
         if (loadWiFis()) {
-            currentWiFisUsed = true;
+            currentDataUsed = true;
             listener.onWiFisChanged(wiFis);
         }
     }
 
-    public synchronized boolean scanWiFis() {
+    private synchronized boolean scanWiFis() {
         if (state == State.DISABLED)
             throw new IllegalStateException("can't scan on disabled WiFiBackendHelper");
         if (wifiManager.isWifiEnabled() || isScanAlawaysAvailable()) {
@@ -107,14 +120,15 @@ public class WiFiBackendHelper {
         return false;
     }
 
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     private boolean isScanAlawaysAvailable() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2
                 && wifiManager.isScanAlwaysAvailable();
     }
 
-    public synchronized boolean loadWiFis() {
+    private synchronized boolean loadWiFis() {
         wiFis.clear();
-        currentWiFisUsed = false;
+        currentDataUsed = false;
         List<ScanResult> scanResults = wifiManager.getScanResults();
         for (ScanResult scanResult : scanResults) {
             if (ignoreNomap && scanResult.SSID.toLowerCase().endsWith("_nomap")) continue;
@@ -132,17 +146,30 @@ public class WiFiBackendHelper {
         }
     }
 
+    /**
+     * @return the latest scan result.
+     */
     public synchronized Set<WiFi> getWiFis() {
-        currentWiFisUsed = true;
+        currentDataUsed = true;
         return new HashSet<>(wiFis);
     }
 
-    private enum State {DISABLED, WAITING, SCANNING, DISABLING}
-
+    /**
+     * Interface to listen for Wi-Fi scan results.
+     */
     public interface Listener {
+        /**
+         * Called when a new set of Wi-Fi's is discovered.
+         */
         public void onWiFisChanged(Set<WiFi> wiFis);
     }
 
+    /**
+     * Represents a generic Wi-Fi scan result.
+     * <p/>
+     * This does contain the BSSID (mac address) and the RSSI (in dBm) of a Wi-Fi.
+     * Additional data is not provided, but also not usable for geolocation.
+     */
     public static class WiFi {
         private final String bssid;
         private final int rssi;
@@ -162,10 +189,10 @@ public class WiFiBackendHelper {
     }
 
     /**
-     * Bring a mac address to the form FF:FF:FF:FF:FF:FF
+     * Bring a mac address to the form 01:23:45:AB:CD:EF
      *
-     * @param mac mac to be cleaned
-     * @return cleaned up mac
+     * @param mac address to be well-formed
+     * @return well-formed mac address
      */
     public static String wellFormedMac(String mac) {
         int HEX_RADIX = 16;
