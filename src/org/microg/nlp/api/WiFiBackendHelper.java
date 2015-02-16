@@ -104,8 +104,7 @@ public class WiFiBackendHelper extends AbstractBackendHelper {
 
     private void onWiFisChanged() {
         if (loadWiFis()) {
-            currentDataUsed = true;
-            listener.onWiFisChanged(wiFis);
+            listener.onWiFisChanged(getWiFis());
         }
     }
 

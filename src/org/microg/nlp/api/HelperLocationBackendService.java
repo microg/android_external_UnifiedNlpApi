@@ -23,28 +23,43 @@ import java.util.Set;
 
 public abstract class HelperLocationBackendService extends LocationBackendService {
 
+    private boolean opened;
     private Set<AbstractBackendHelper> helpers = new HashSet<>();
 
-    public void addHelper(AbstractBackendHelper helper) {
+    public synchronized void addHelper(AbstractBackendHelper helper) {
         helpers.add(helper);
-    }
-
-    @Override
-    protected void onOpen() {
-        for (AbstractBackendHelper helper : helpers) {
+        if (opened) {
             helper.onOpen();
         }
     }
 
-    @Override
-    protected void onClose() {
-        for (AbstractBackendHelper helper : helpers) {
-            helper.onClose();
+    public synchronized void removeHelpers() {
+        if (opened) {
+            for (AbstractBackendHelper helper : helpers) {
+                helper.onClose();
+            }
         }
+        helpers.clear();
     }
 
     @Override
-    protected Location update() {
+    protected synchronized void onOpen() {
+        for (AbstractBackendHelper helper : helpers) {
+            helper.onOpen();
+        }
+        opened = true;
+    }
+
+    @Override
+    protected synchronized void onClose() {
+        for (AbstractBackendHelper helper : helpers) {
+            helper.onClose();
+        }
+        opened = false;
+    }
+
+    @Override
+    protected synchronized Location update() {
         for (AbstractBackendHelper helper : helpers) {
             helper.onUpdate();
         }

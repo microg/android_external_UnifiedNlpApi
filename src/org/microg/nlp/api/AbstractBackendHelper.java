@@ -56,7 +56,6 @@ public class AbstractBackendHelper {
      * Call this in {@link org.microg.nlp.api.LocationBackendService#update()}.
      */
     public synchronized void onUpdate() {
-        // TODO
     }
 
     protected enum State {DISABLED, WAITING, SCANNING, DISABLING}

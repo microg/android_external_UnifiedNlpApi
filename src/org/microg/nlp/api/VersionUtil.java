@@ -31,21 +31,19 @@ public class VersionUtil {
         } catch (PackageManager.NameNotFoundException e) {
             return null;
         }
-        return applicationInfo.metaData != null
-                ? applicationInfo.metaData.getString(Constants.METADATA_API_VERSION)
-                : null;
+        return applicationInfo.metaData == null ? null
+                : applicationInfo.metaData.getString(Constants.METADATA_API_VERSION);
     }
 
     public static String getServiceApiVersion(Context context) {
         String apiVersion = getPackageApiVersion(context, "com.google.android.gms");
-        return apiVersion == null
-                ? getPackageApiVersion(context, "com.google.android.location")
-                : apiVersion;
+        return apiVersion != null ? apiVersion
+                : getPackageApiVersion(context, "com.google.android.location");
     }
 
     public static String getSelfApiVersion(Context context) {
         String apiVersion = getPackageApiVersion(context, context.getPackageName());
-        if (apiVersion == null || !apiVersion.equals(Constants.API_VERSION)) {
+        if (!Constants.API_VERSION.equals(apiVersion)) {
             Log.w("VersionUtil", "You did not specify the currently used api version in your manifest.\n" +
                     "When using gradle + aar, this should be done automatically, if not, add the\n" +
                     "following to your <application> tag\n" +
