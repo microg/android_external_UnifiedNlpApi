@@ -95,8 +95,7 @@ public class WiFiBackendHelper extends AbstractBackendHelper {
      */
     public synchronized void onUpdate() {
         if (!currentDataUsed) {
-            currentDataUsed = true;
-            listener.onWiFisChanged(wiFis);
+            listener.onWiFisChanged(getWiFis());
         } else {
             scanWiFis();
         }
@@ -110,7 +109,7 @@ public class WiFiBackendHelper extends AbstractBackendHelper {
 
     private synchronized boolean scanWiFis() {
         if (state == State.DISABLED)
-            throw new IllegalStateException("can't scan on disabled WiFiBackendHelper");
+            return false;
         if (wifiManager.isWifiEnabled() || isScanAlawaysAvailable()) {
             state = State.SCANNING;
             wifiManager.startScan();
