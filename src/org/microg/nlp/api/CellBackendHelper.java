@@ -53,9 +53,9 @@ import java.util.Set;
 public class CellBackendHelper extends AbstractBackendHelper {
     private final Listener listener;
     private final TelephonyManager telephonyManager;
+    private final Set<Cell> cells = new HashSet<>();
     private PhoneStateListener phoneStateListener;
     private boolean supportsCellInfoChanged = true;
-    private Set<Cell> cells = new HashSet<>();
 
     /**
      * Create a new instance of {@link CellBackendHelper}. Call this in
@@ -259,18 +259,26 @@ public class CellBackendHelper extends AbstractBackendHelper {
     private synchronized boolean loadCells(List<CellInfo> cellInfo) {
         cells.clear();
         currentDataUsed = false;
-        fixAllCellInfo(cellInfo);
-        for (CellInfo info : cellInfo) {
-            Cell cell = parseCellInfo(info);
-            if (cell == null) continue;
-            cells.add(cell);
-        }
-        for (NeighboringCellInfo info : telephonyManager.getNeighboringCellInfo()) {
-            if (!hasCid(info.getCid())) {
-                Cell cell = parseCellInfo(info);
-                if (cell == null) continue;
-                cells.add(cell);
+        try {
+            if (cellInfo != null) {
+                fixAllCellInfo(cellInfo);
+                for (CellInfo info : cellInfo) {
+                    Cell cell = parseCellInfo(info);
+                    if (cell == null) continue;
+                    cells.add(cell);
+                }
             }
+            List<NeighboringCellInfo> neighboringCellInfo = telephonyManager.getNeighboringCellInfo();
+            if (neighboringCellInfo != null) {
+                for (NeighboringCellInfo info : neighboringCellInfo) {
+                    if (!hasCid(info.getCid())) {
+                        Cell cell = parseCellInfo(info);
+                        if (cell == null) continue;
+                        cells.add(cell);
+                    }
+                }
+            }
+        } catch (Exception ignored) {
         }
         if (state == State.DISABLING)
             state = State.DISABLED;
