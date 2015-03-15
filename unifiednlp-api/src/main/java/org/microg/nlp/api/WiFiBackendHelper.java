@@ -27,6 +27,7 @@ import android.os.Build;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -129,7 +130,7 @@ public class WiFiBackendHelper extends AbstractBackendHelper {
         currentDataUsed = false;
         List<ScanResult> scanResults = wifiManager.getScanResults();
         for (ScanResult scanResult : scanResults) {
-            if (ignoreNomap && scanResult.SSID.toLowerCase().endsWith("_nomap")) continue;
+            if (ignoreNomap && scanResult.SSID.toLowerCase(Locale.US).endsWith("_nomap")) continue;
             wiFis.add(new WiFi(scanResult.BSSID, scanResult.level));
         }
         if (state == State.DISABLING)

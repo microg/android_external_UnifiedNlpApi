@@ -20,15 +20,11 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:1.0.0'
-        classpath 'com.github.dcendents:android-maven-plugin:1.2'
     }
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'com.github.dcendents.android-maven'
-
-group = 'org.microg'
-version = '1.4-SNAPSHOT'
+apply from: 'gradle-mvn-push.gradle'
 
 android {
     compileSdkVersion 22
