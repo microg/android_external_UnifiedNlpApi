@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 buildscript {
     repositories {
         mavenCentral()
@@ -22,11 +21,15 @@ buildscript {
         classpath 'com.android.tools.build:gradle:1.0.0'
     }
 }
-
 apply plugin: 'com.android.library'
 apply from: 'gradle-mvn-push.gradle'
-
 android {
     compileSdkVersion 22
     buildToolsVersion "22.0.0"
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_6
+    }
+}
+
+dependencies {
 }

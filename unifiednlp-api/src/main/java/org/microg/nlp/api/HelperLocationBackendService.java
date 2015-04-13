@@ -24,7 +24,7 @@ import java.util.Set;
 public abstract class HelperLocationBackendService extends LocationBackendService {
 
     private boolean opened;
-    private Set<AbstractBackendHelper> helpers = new HashSet<>();
+    private Set<AbstractBackendHelper> helpers = new HashSet<AbstractBackendHelper>();
 
     public synchronized void addHelper(AbstractBackendHelper helper) {
         helpers.add(helper);

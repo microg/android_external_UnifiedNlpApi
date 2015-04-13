@@ -53,7 +53,7 @@ import java.util.Set;
 public class CellBackendHelper extends AbstractBackendHelper {
     private final Listener listener;
     private final TelephonyManager telephonyManager;
-    private final Set<Cell> cells = new HashSet<>();
+    private final Set<Cell> cells = new HashSet<Cell>();
     private PhoneStateListener phoneStateListener;
     private boolean supportsCellInfoChanged = true;
 
@@ -238,12 +238,12 @@ public class CellBackendHelper extends AbstractBackendHelper {
                 try {
                     Field mncField = identity.getClass().getDeclaredField("mMnc");
                     mncField.setAccessible(true);
-                    int mnc = (int) mncField.get(identity);
+                    int mnc = (Integer) mncField.get(identity);
                     if (mnc >= 25 && mnc <= 1005) {
                         mnc = (mnc - 15) / 10;
                         mncField.setInt(identity, mnc);
                     }
-                } catch (NoSuchFieldException | IllegalAccessException ignored) {
+                } catch (Exception ignored) {
                 }
             }
         }
@@ -294,7 +294,7 @@ public class CellBackendHelper extends AbstractBackendHelper {
 
     public synchronized Set<Cell> getCells() {
         currentDataUsed = true;
-        return new HashSet<>(cells);
+        return new HashSet<Cell>(cells);
     }
 
     /**

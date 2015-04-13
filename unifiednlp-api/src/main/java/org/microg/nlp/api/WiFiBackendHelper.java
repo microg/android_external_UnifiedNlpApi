@@ -39,7 +39,7 @@ public class WiFiBackendHelper extends AbstractBackendHelper {
 
     private final Listener listener;
     private final WifiManager wifiManager;
-    private final Set<WiFi> wiFis = new HashSet<>();
+    private final Set<WiFi> wiFis = new HashSet<WiFi>();
     private final BroadcastReceiver wifiBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -150,7 +150,7 @@ public class WiFiBackendHelper extends AbstractBackendHelper {
      */
     public synchronized Set<WiFi> getWiFis() {
         currentDataUsed = true;
-        return new HashSet<>(wiFis);
+        return new HashSet<WiFi>(wiFis);
     }
 
     /**
