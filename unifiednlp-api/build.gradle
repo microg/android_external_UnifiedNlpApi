@@ -25,7 +25,7 @@ apply plugin: 'com.android.library'
 apply from: 'gradle-mvn-push.gradle'
 android {
     compileSdkVersion 22
-    buildToolsVersion "22.0.0"
+    buildToolsVersion "22.0.1"
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_6
     }
