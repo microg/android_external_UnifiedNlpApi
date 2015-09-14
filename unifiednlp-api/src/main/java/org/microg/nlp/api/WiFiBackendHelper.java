@@ -131,7 +131,7 @@ public class WiFiBackendHelper extends AbstractBackendHelper {
         List<ScanResult> scanResults = wifiManager.getScanResults();
         for (ScanResult scanResult : scanResults) {
             if (ignoreNomap && scanResult.SSID.toLowerCase(Locale.US).endsWith("_nomap")) continue;
-            wiFis.add(new WiFi(scanResult.BSSID, scanResult.level));
+            wiFis.add(new WiFi(scanResult.BSSID, scanResult.level, frequencyToChannel(scanResult.frequency), scanResult.frequency));
         }
         if (state == State.DISABLING)
             state = State.DISABLED;
@@ -142,6 +142,17 @@ public class WiFiBackendHelper extends AbstractBackendHelper {
             case SCANNING:
                 state = State.WAITING;
                 return true;
+        }
+    }
+
+    @SuppressWarnings("MagicNumber")
+    private static int frequencyToChannel(int freq) {
+        if (freq >= 2412 && freq <= 2484) {
+            return (freq - 2412) / 5 + 1;
+        } else if (freq >= 5170 && freq <= 5825) {
+            return (freq - 5170) / 5 + 34;
+        } else {
+            return -1;
         }
     }
 
@@ -172,6 +183,8 @@ public class WiFiBackendHelper extends AbstractBackendHelper {
     public static class WiFi {
         private final String bssid;
         private final int rssi;
+        private final int channel;
+        private final int frequency;
 
         public String getBssid() {
             return bssid;
@@ -181,9 +194,23 @@ public class WiFiBackendHelper extends AbstractBackendHelper {
             return rssi;
         }
 
+        public int getChannel() {
+            return channel;
+        }
+
+        public int getFrequency() {
+            return frequency;
+        }
+
         public WiFi(String bssid, int rssi) {
+            this(bssid, rssi, -1, -1);
+        }
+
+        public WiFi(String bssid, int rssi, Integer channel, Integer frequency) {
             this.bssid = wellFormedMac(bssid);
             this.rssi = rssi;
+            this.channel = channel;
+            this.frequency = frequency;
         }
     }
 
