@@ -29,6 +29,7 @@ import android.telephony.CellInfoCdma;
 import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
 import android.telephony.CellInfoWcdma;
+import android.telephony.CellLocation;
 import android.telephony.CellSignalStrengthCdma;
 import android.telephony.CellSignalStrengthGsm;
 import android.telephony.CellSignalStrengthLte;
@@ -37,8 +38,11 @@ import android.telephony.NeighboringCellInfo;
 import android.telephony.PhoneStateListener;
 import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
+import android.telephony.cdma.CdmaCellLocation;
+import android.telephony.gsm.GsmCellLocation;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -87,14 +91,23 @@ public class CellBackendHelper extends AbstractBackendHelper {
                             onCellsChanged(cellInfo);
                         } else if (supportsCellInfoChanged) {
                             supportsCellInfoChanged = false;
-                            onCellsChanged(telephonyManager.getAllCellInfo());
+                            onSignalStrengthsChanged(null);
                         }
                     }
 
                     @Override
                     public void onSignalStrengthsChanged(SignalStrength signalStrength) {
                         if (!supportsCellInfoChanged) {
-                            onCellInfoChanged(telephonyManager.getAllCellInfo());
+                            List<CellInfo> allCellInfo = telephonyManager.getAllCellInfo();
+                            if ((allCellInfo == null || allCellInfo.isEmpty()) && telephonyManager.getNetworkType() > 0) {
+                                allCellInfo = new ArrayList<CellInfo>();
+                                CellLocation cellLocation = telephonyManager.getCellLocation();
+                                if (cellLocation != null) {
+                                    CellInfo cellInfo = fromCellLocation(cellLocation);
+                                    if (cellInfo != null) allCellInfo.add(cellInfo);
+                                }
+                            }
+                            onCellInfoChanged(allCellInfo);
                         }
                     }
                 };
@@ -254,6 +267,38 @@ public class CellBackendHelper extends AbstractBackendHelper {
             if (cell.getCid() == cid) return true;
         }
         return false;
+    }
+
+    /**
+     * This is to support some broken implementations that do not support {@link TelephonyManager#getAllCellInfo()}
+     */
+    @SuppressWarnings("ChainOfInstanceofChecks")
+    private CellInfo fromCellLocation(CellLocation cellLocation) {
+        try {
+            if (cellLocation instanceof GsmCellLocation) {
+                GsmCellLocation gsmCellLocation = (GsmCellLocation) cellLocation;
+                CellIdentityGsm identity = CellIdentityGsm.class.getConstructor(int.class, int.class, int.class, int.class)
+                        .newInstance(getMcc(), getMnc(), gsmCellLocation.getLac(), gsmCellLocation.getCid());
+                CellSignalStrengthGsm strength = CellSignalStrengthGsm.class.newInstance();
+                CellInfoGsm info = CellInfoGsm.class.newInstance();
+                CellInfoGsm.class.getMethod("setCellIdentity", CellIdentityGsm.class).invoke(info, identity);
+                CellInfoGsm.class.getMethod("setCellSignalStrength", CellSignalStrengthGsm.class).invoke(info, strength);
+                return info;
+            }
+            if (cellLocation instanceof CdmaCellLocation) {
+                CdmaCellLocation cdmaCellLocation = (CdmaCellLocation) cellLocation;
+                CellIdentityCdma identity = CellIdentityCdma.class.getConstructor(int.class, int.class, int.class, int.class, int.class)
+                        .newInstance(cdmaCellLocation.getNetworkId(), cdmaCellLocation.getSystemId(), cdmaCellLocation.getBaseStationId(),
+                                cdmaCellLocation.getBaseStationLongitude(), cdmaCellLocation.getBaseStationLatitude());
+                CellSignalStrengthCdma strength = CellSignalStrengthCdma.class.newInstance();
+                CellInfoCdma info = CellInfoCdma.class.newInstance();
+                CellInfoCdma.class.getMethod("setCellIdentity", CellIdentityCdma.class).invoke(info, identity);
+                CellInfoCdma.class.getMethod("setCellSignalStrength", CellSignalStrengthCdma.class).invoke(info, strength);
+                return info;
+            }
+        } catch (Exception e) {
+        }
+        return null;
     }
 
     private synchronized boolean loadCells(List<CellInfo> cellInfo) {
