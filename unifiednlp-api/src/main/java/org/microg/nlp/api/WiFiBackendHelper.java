@@ -33,6 +33,7 @@ import java.util.Set;
 /**
  * Utility class to support backends that use Wi-Fis for geolocation.
  */
+@SuppressWarnings("MissingPermission")
 public class WiFiBackendHelper extends AbstractBackendHelper {
     private final static IntentFilter wifiBroadcastFilter =
             new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
