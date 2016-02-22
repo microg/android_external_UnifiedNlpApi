@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 microG Project Team
+ * Copyright 2013-2016 microG Project Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,8 @@ public class Constants {
     public static final String LOCATION_EXTRA_OTHER_BACKENDS = "OTHER_BACKEND_RESULTS";
     public static final String METADATA_BACKEND_SETTINGS_ACTIVITY = "org.microg.nlp.BACKEND_SETTINGS_ACTIVITY";
     public static final String METADATA_BACKEND_ABOUT_ACTIVITY = "org.microg.nlp.BACKEND_ABOUT_ACTIVITY";
+    public static final String METADATA_BACKEND_INIT_ACTIVITY = "org.microg.nlp.BACKEND_INIT_ACTIVITY";
     public static final String METADATA_BACKEND_SUMMARY = "org.microg.nlp.BACKEND_SUMMARY";
     public static final String METADATA_API_VERSION = "org.microg.nlp.API_VERSION";
-    public static final String API_VERSION = "1";
+    public static final String API_VERSION = "2";
 }

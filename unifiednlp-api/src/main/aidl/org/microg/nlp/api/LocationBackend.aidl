@@ -7,4 +7,7 @@ interface LocationBackend {
     void open(LocationCallback callback);
     Location update();
     void close();
+    Intent getInitIntent();
+    Intent getSettingsIntent();
+    Intent getAboutIntent();
 }

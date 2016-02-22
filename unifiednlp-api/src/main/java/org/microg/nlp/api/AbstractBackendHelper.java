@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 microG Project Team
+ * Copyright 2013-2016 microG Project Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,6 +56,10 @@ public class AbstractBackendHelper {
      * Call this in {@link org.microg.nlp.api.LocationBackendService#update()}.
      */
     public synchronized void onUpdate() {
+    }
+
+    public String[] getRequiredPermissions() {
+        return new String[0];
     }
 
     protected enum State {DISABLED, WAITING, SCANNING, DISABLING}

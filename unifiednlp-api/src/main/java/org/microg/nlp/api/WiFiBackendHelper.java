@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 microG Project Team
+ * Copyright 2013-2016 microG Project Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+
+import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
+import static android.Manifest.permission.ACCESS_WIFI_STATE;
+import static android.Manifest.permission.CHANGE_WIFI_STATE;
 
 /**
  * Utility class to support backends that use Wi-Fis for geolocation.
@@ -103,6 +107,11 @@ public class WiFiBackendHelper extends AbstractBackendHelper {
         }
     }
 
+    @Override
+    public String[] getRequiredPermissions() {
+        return new String[]{CHANGE_WIFI_STATE, ACCESS_WIFI_STATE, ACCESS_COARSE_LOCATION};
+    }
+
     private void onWiFisChanged() {
         if (loadWiFis()) {
             listener.onWiFisChanged(getWiFis());
@@ -112,7 +121,7 @@ public class WiFiBackendHelper extends AbstractBackendHelper {
     private synchronized boolean scanWiFis() {
         if (state == State.DISABLED)
             return false;
-        if (wifiManager.isWifiEnabled() || isScanAlawaysAvailable()) {
+        if (wifiManager.isWifiEnabled() || isScanAlwaysAvailable()) {
             state = State.SCANNING;
             wifiManager.startScan();
             return true;
@@ -121,7 +130,7 @@ public class WiFiBackendHelper extends AbstractBackendHelper {
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private boolean isScanAlawaysAvailable() {
+    private boolean isScanAlwaysAvailable() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2
                 && wifiManager.isScanAlwaysAvailable();
     }

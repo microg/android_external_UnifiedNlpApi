@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 microG Project Team
+ * Copyright 2013-2016 microG Project Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,6 +47,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
+import static android.Manifest.permission.READ_PHONE_STATE;
+
 /**
  * Utility class to support backends that use Cells for geolocation.
  * <p/>
@@ -76,44 +79,6 @@ public class CellBackendHelper extends AbstractBackendHelper {
             throw new IllegalArgumentException("listener must not be null");
         this.listener = listener;
         this.telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-
-        // For some reason the Constructor of PhoneStateListener accepting a Looper is hidden,
-        // so we have to change the looper manually...
-        Handler mainHandler = new Handler(context.getMainLooper());
-        mainHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                phoneStateListener = new PhoneStateListener() {
-
-                    @Override
-                    public void onCellInfoChanged(List<CellInfo> cellInfo) {
-                        if (cellInfo != null) {
-                            onCellsChanged(cellInfo);
-                        } else if (supportsCellInfoChanged) {
-                            supportsCellInfoChanged = false;
-                            onSignalStrengthsChanged(null);
-                        }
-                    }
-
-                    @Override
-                    public void onSignalStrengthsChanged(SignalStrength signalStrength) {
-                        if (!supportsCellInfoChanged) {
-                            List<CellInfo> allCellInfo = telephonyManager.getAllCellInfo();
-                            if ((allCellInfo == null || allCellInfo.isEmpty()) && telephonyManager.getNetworkType() > 0) {
-                                allCellInfo = new ArrayList<CellInfo>();
-                                CellLocation cellLocation = telephonyManager.getCellLocation();
-                                if (cellLocation != null) {
-                                    CellInfo cellInfo = fromCellLocation(cellLocation);
-                                    if (cellInfo != null) allCellInfo.add(cellInfo);
-                                }
-                            }
-                            onCellInfoChanged(allCellInfo);
-                        }
-                    }
-                };
-                registerPhoneStateListener();
-            }
-        });
     }
 
     private int getMcc() {
@@ -348,21 +313,56 @@ public class CellBackendHelper extends AbstractBackendHelper {
     @Override
     public synchronized void onOpen() {
         super.onOpen();
-        if (phoneStateListener != null) registerPhoneStateListener();
+
+        if (phoneStateListener == null) {
+            Handler mainHandler = new Handler(context.getMainLooper());
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    phoneStateListener = new PhoneStateListener() {
+
+                        @Override
+                        public void onCellInfoChanged(List<CellInfo> cellInfo) {
+                            if (cellInfo != null) {
+                                onCellsChanged(cellInfo);
+                            } else if (supportsCellInfoChanged) {
+                                supportsCellInfoChanged = false;
+                                onSignalStrengthsChanged(null);
+                            }
+                        }
+
+                        @Override
+                        public void onSignalStrengthsChanged(SignalStrength signalStrength) {
+                            if (!supportsCellInfoChanged) {
+                                List<CellInfo> allCellInfo = telephonyManager.getAllCellInfo();
+                                if ((allCellInfo == null || allCellInfo.isEmpty()) && telephonyManager.getNetworkType() > 0) {
+                                    allCellInfo = new ArrayList<CellInfo>();
+                                    CellLocation cellLocation = telephonyManager.getCellLocation();
+                                    if (cellLocation != null) {
+                                        CellInfo cellInfo = fromCellLocation(cellLocation);
+                                        if (cellInfo != null) allCellInfo.add(cellInfo);
+                                    }
+                                }
+                                onCellInfoChanged(allCellInfo);
+                            }
+                        }
+                    };
+                    registerPhoneStateListener();
+                }
+            });
+        } else {
+            registerPhoneStateListener();
+        }
     }
 
     private synchronized void registerPhoneStateListener() {
-        telephonyManager.listen(phoneStateListener,
-                PhoneStateListener.LISTEN_CELL_INFO
-                        | PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
-    }
-
-    @Override
-    public synchronized void onUpdate() {
-        if (!currentDataUsed) {
-            listener.onCellsChanged(getCells());
-        } else {
-            state = State.SCANNING;
+        try {
+            telephonyManager.listen(phoneStateListener,
+                    PhoneStateListener.LISTEN_CELL_INFO
+                            | PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
+        } catch (Exception e) {
+            // Can't listen
+            phoneStateListener = null;
         }
     }
 
@@ -374,6 +374,20 @@ public class CellBackendHelper extends AbstractBackendHelper {
         super.onClose();
         if (phoneStateListener != null)
             telephonyManager.listen(phoneStateListener, PhoneStateListener.LISTEN_NONE);
+    }
+
+    @Override
+    public synchronized void onUpdate() {
+        if (!currentDataUsed) {
+            listener.onCellsChanged(getCells());
+        } else {
+            state = State.SCANNING;
+        }
+    }
+
+    @Override
+    public String[] getRequiredPermissions() {
+        return new String[]{READ_PHONE_STATE, ACCESS_COARSE_LOCATION};
     }
 
     public interface Listener {

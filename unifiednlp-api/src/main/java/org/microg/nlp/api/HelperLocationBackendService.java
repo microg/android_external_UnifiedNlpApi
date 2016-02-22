@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 microG Project Team
+ * Copyright 2013-2016 microG Project Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,23 @@
 
 package org.microg.nlp.api;
 
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Location;
+import android.os.Build;
+import android.util.Log;
 
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 public abstract class HelperLocationBackendService extends LocationBackendService {
 
     private boolean opened;
-    private Set<AbstractBackendHelper> helpers = new HashSet<AbstractBackendHelper>();
+    private final Set<AbstractBackendHelper> helpers = new HashSet<AbstractBackendHelper>();
 
     public synchronized void addHelper(AbstractBackendHelper helper) {
         helpers.add(helper);
@@ -64,5 +72,27 @@ public abstract class HelperLocationBackendService extends LocationBackendServic
             helper.onUpdate();
         }
         return null;
+    }
+
+    @Override
+    protected Intent getInitIntent() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // Consider permissions
+            List<String> perms = new LinkedList<String>();
+            for (AbstractBackendHelper helper : helpers) {
+                perms.addAll(Arrays.asList(helper.getRequiredPermissions()));
+            }
+            for (Iterator<String> iterator = perms.iterator(); iterator.hasNext(); ) {
+                String perm = iterator.next();
+                if (checkSelfPermission(perm) == PackageManager.PERMISSION_GRANTED) {
+                    iterator.remove();
+                }
+            }
+            if (perms.isEmpty()) return null;
+            Intent intent = new Intent(this, MPermissionHelperActivity.class);
+            intent.putExtra(MPermissionHelperActivity.EXTRA_PERMISSIONS, perms.toArray(new String[perms.size()]));
+            return intent;
+        }
+        return super.getInitIntent();
     }
 }

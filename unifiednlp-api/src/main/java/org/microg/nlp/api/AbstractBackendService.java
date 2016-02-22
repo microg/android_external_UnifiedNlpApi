@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 microG Project Team
+ * Copyright 2013-2016 microG Project Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +39,18 @@ public abstract class AbstractBackendService extends Service {
      */
     protected void onClose() {
 
+    }
+
+    protected Intent getInitIntent() {
+        return null;
+    }
+
+    protected Intent getSettingsIntent() {
+        return null;
+    }
+
+    protected Intent getAboutIntent() {
+        return null;
     }
 
     @Override

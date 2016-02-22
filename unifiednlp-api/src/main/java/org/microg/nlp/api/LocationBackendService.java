@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 microG Project Team
+ * Copyright 2013-2016 microG Project Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package org.microg.nlp.api;
 
+import android.content.Intent;
 import android.location.Location;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -100,6 +101,21 @@ public abstract class LocationBackendService extends AbstractBackendService {
         @Override
         public void close() throws RemoteException {
             disconnect();
+        }
+
+        @Override
+        public Intent getInitIntent() throws RemoteException {
+            return LocationBackendService.this.getInitIntent();
+        }
+
+        @Override
+        public Intent getSettingsIntent() throws RemoteException {
+            return LocationBackendService.this.getSettingsIntent();
+        }
+
+        @Override
+        public Intent getAboutIntent() throws RemoteException {
+            return LocationBackendService.this.getAboutIntent();
         }
     }
 }

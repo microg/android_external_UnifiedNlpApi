@@ -10,4 +10,7 @@ interface GeocoderBackend {
         double lowerLeftLongitude, double upperRightLatitude, double upperRightLongitude, 
         String locale);
     void close();
+    Intent getInitIntent();
+    Intent getSettingsIntent();
+    Intent getAboutIntent();
 }
