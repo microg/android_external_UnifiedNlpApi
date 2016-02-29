@@ -1,5 +1,6 @@
 package org.microg.nlp.api;
 
+import android.content.Intent;
 import android.location.Location;
 import android.location.Address;
 
