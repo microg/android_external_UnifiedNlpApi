@@ -1,6 +1,7 @@
 package org.microg.nlp.api;
 
 import org.microg.nlp.api.LocationCallback;
+import android.content.Intent;
 import android.location.Location;
 
 interface LocationBackend {
