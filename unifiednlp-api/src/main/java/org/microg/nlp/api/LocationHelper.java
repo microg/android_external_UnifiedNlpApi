@@ -22,15 +22,21 @@ import android.os.Bundle;
 import java.util.Collection;
 
 public final class LocationHelper {
+    public static final String EXTRA_AVERAGED_OF = "AVERAGED_OF";
+    public static final String EXTRA_TOTAL_WEIGHT = "org.microg.nlp.TOTAL_WEIGHT";
+    public static final String EXTRA_TOTAL_ALTITUDE_WEIGHT = "org.microg.nlp.TOTAL_ALTITUDE_WEIGHT";
+    public static final String EXTRA_WEIGHT = "org.microg.nlp.WEIGHT";
+
     private LocationHelper() {
     }
 
     public static Location create(String source) {
-        return new Location(source);
+        Location l = new Location(source);
+        l.setTime(System.currentTimeMillis());
+        return l;
     }
 
-    public static Location create(String source, double latitude, double longitude,
-            float accuracy) {
+    public static Location create(String source, double latitude, double longitude, float accuracy) {
         Location location = create(source);
         location.setLatitude(latitude);
         location.setLongitude(longitude);
@@ -38,22 +44,19 @@ public final class LocationHelper {
         return location;
     }
 
-    public static Location create(String source, double latitude, double longitude, float altitude,
-            Bundle extras) {
+    public static Location create(String source, double latitude, double longitude, float altitude, Bundle extras) {
         Location location = create(source, latitude, longitude, altitude);
         location.setExtras(extras);
         return location;
     }
 
-    public static Location create(String source, double latitude, double longitude, double altitude,
-            float accuracy) {
+    public static Location create(String source, double latitude, double longitude, double altitude, float accuracy) {
         Location location = create(source, latitude, longitude, accuracy);
         location.setAltitude(altitude);
         return location;
     }
 
-    public static Location create(String source, double latitude, double longitude, double altitude,
-            float accuracy, Bundle extras) {
+    public static Location create(String source, double latitude, double longitude, double altitude, float accuracy, Bundle extras) {
         Location location = create(source, latitude, longitude, altitude, accuracy);
         location.setExtras(extras);
         return location;
@@ -72,33 +75,57 @@ public final class LocationHelper {
     }
 
     public static Location average(String source, Collection<Location> locations) {
-        if (locations == null || locations.size() == 0) {
+        return weightedAverage(source, locations, LocationBalance.BALANCED, new Bundle());
+    }
+
+    public static Location weightedAverage(String source, Collection<Location> locations, LocationBalance balance, Bundle extras) {
+        if (locations == null || locations.isEmpty()) {
             return null;
         }
-        int num = locations.size();
-        double latitude = 0;
-        double longitude = 0;
-        float accuracy = 0;
-        int altitudes = 0;
-        double altitude = 0;
+        double total = 0;
+        double lat = 0;
+        double lon = 0;
+        float acc = 0;
+        double altTotal = 0;
+        double alt = 0;
         for (Location value : locations) {
             if (value != null) {
-                latitude += value.getLatitude();
-                longitude += value.getLongitude();
-                accuracy += value.getAccuracy();
+                double weight = balance.getWeight(value);
+                total += weight;
+                lat += value.getLatitude() * weight;
+                lon += value.getLongitude() * weight;
+                acc += value.getAccuracy() * weight;
                 if (value.hasAltitude()) {
-                    altitude += value.getAltitude();
-                    altitudes++;
+                    alt += value.getAltitude();
+                    altTotal += weight;
                 }
             }
         }
-        Bundle extras = new Bundle();
-        extras.putInt("AVERAGED_OF", num);
-        if (altitudes > 0) {
-            return create(source, latitude / num, longitude / num, altitude / altitudes,
-                    accuracy / num, extras);
+        if (extras == null) extras = new Bundle();
+        extras.putInt(EXTRA_AVERAGED_OF, locations.size());
+        extras.putDouble(EXTRA_TOTAL_WEIGHT, total);
+        if (altTotal > 0) {
+            extras.putDouble(EXTRA_TOTAL_ALTITUDE_WEIGHT, altTotal);
+            return create(source, lat / total, lon / total, alt / altTotal, (float) (acc / total), extras);
         } else {
-            return create(source, latitude / num, longitude / num, accuracy / num, extras);
+            return create(source, lat / total, lon / total, (float) (acc / total), extras);
         }
+    }
+
+    public interface LocationBalance {
+        LocationBalance BALANCED = new LocationBalance() {
+            @Override
+            public double getWeight(Location location) {
+                return 1;
+            }
+        };
+        LocationBalance FROM_EXTRA = new LocationBalance() {
+            @Override
+            public double getWeight(Location location) {
+                return location.getExtras() == null ? 1 : location.getExtras().getDouble(EXTRA_WEIGHT, 1);
+            }
+        };
+
+        double getWeight(Location location);
     }
 }
