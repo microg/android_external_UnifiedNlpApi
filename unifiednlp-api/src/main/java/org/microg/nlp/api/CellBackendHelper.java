@@ -64,6 +64,10 @@ public class CellBackendHelper extends AbstractBackendHelper {
     private PhoneStateListener phoneStateListener;
     private boolean supportsCellInfoChanged = true;
 
+    public static final int MIN_UPDATE_INTERVAL = 30 * 1000;
+    public static final int FALLBACK_UPDATE_INTERVAL = 5 * 60 * 1000;
+    private long lastScan = 0;
+
     /**
      * Create a new instance of {@link CellBackendHelper}. Call this in
      * {@link LocationBackendService#onCreate()}.
@@ -174,6 +178,7 @@ public class CellBackendHelper extends AbstractBackendHelper {
     }
 
     private void onCellsChanged(List<CellInfo> cellInfo) {
+        lastScan = System.currentTimeMillis();
         if (loadCells(cellInfo)) {
             listener.onCellsChanged(getCells());
         }
@@ -323,7 +328,7 @@ public class CellBackendHelper extends AbstractBackendHelper {
 
                         @Override
                         public void onCellInfoChanged(List<CellInfo> cellInfo) {
-                            if (cellInfo != null) {
+                            if (cellInfo != null && !cellInfo.isEmpty()) {
                                 onCellsChanged(cellInfo);
                             } else if (supportsCellInfoChanged) {
                                 supportsCellInfoChanged = false;
@@ -334,16 +339,7 @@ public class CellBackendHelper extends AbstractBackendHelper {
                         @Override
                         public void onSignalStrengthsChanged(SignalStrength signalStrength) {
                             if (!supportsCellInfoChanged) {
-                                List<CellInfo> allCellInfo = telephonyManager.getAllCellInfo();
-                                if ((allCellInfo == null || allCellInfo.isEmpty()) && telephonyManager.getNetworkType() > 0) {
-                                    allCellInfo = new ArrayList<CellInfo>();
-                                    CellLocation cellLocation = telephonyManager.getCellLocation();
-                                    if (cellLocation != null) {
-                                        CellInfo cellInfo = fromCellLocation(cellLocation);
-                                        if (cellInfo != null) allCellInfo.add(cellInfo);
-                                    }
-                                }
-                                onCellInfoChanged(allCellInfo);
+                                fallbackScan();
                             }
                         }
                     };
@@ -353,6 +349,18 @@ public class CellBackendHelper extends AbstractBackendHelper {
         } else {
             registerPhoneStateListener();
         }
+    }
+
+    private synchronized void fallbackScan() {
+        if (lastScan + MIN_UPDATE_INTERVAL > System.currentTimeMillis()) return;
+        List<CellInfo> allCellInfo = telephonyManager.getAllCellInfo();
+        if ((allCellInfo == null || allCellInfo.isEmpty()) && telephonyManager.getNetworkType() > 0) {
+            allCellInfo = new ArrayList<CellInfo>();
+            CellLocation cellLocation = telephonyManager.getCellLocation();
+            CellInfo cellInfo = fromCellLocation(cellLocation);
+            if (cellInfo != null) allCellInfo.add(cellInfo);
+        }
+        onCellsChanged(allCellInfo);
     }
 
     private synchronized void registerPhoneStateListener() {
@@ -382,6 +390,9 @@ public class CellBackendHelper extends AbstractBackendHelper {
             listener.onCellsChanged(getCells());
         } else {
             state = State.SCANNING;
+            if (lastScan + FALLBACK_UPDATE_INTERVAL < System.currentTimeMillis()) {
+                fallbackScan();
+            }
         }
     }
 
@@ -391,7 +402,7 @@ public class CellBackendHelper extends AbstractBackendHelper {
     }
 
     public interface Listener {
-        public void onCellsChanged(Set<Cell> cells);
+        void onCellsChanged(Set<Cell> cells);
     }
 
     public static class Cell {
