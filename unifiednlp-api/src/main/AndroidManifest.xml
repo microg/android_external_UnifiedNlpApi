@@ -17,8 +17,6 @@
 <manifest package="org.microg.nlp.api"
           xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <uses-sdk android:minSdkVersion="9"/>
-
     <application>
         <meta-data
             android:name="org.microg.nlp.API_VERSION"
