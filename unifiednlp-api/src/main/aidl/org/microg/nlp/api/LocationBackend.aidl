@@ -1,6 +1,5 @@
 package org.microg.nlp.api;
 
-import java.util.Map;
 import org.microg.nlp.api.LocationCallback;
 import android.content.Intent;
 import android.location.Location;
