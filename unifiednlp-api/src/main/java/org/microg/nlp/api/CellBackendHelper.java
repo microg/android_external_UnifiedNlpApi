@@ -385,7 +385,7 @@ public class CellBackendHelper extends AbstractBackendHelper {
     }
 
     @Override
-    public synchronized void onUpdate() {
+    public synchronized void onUpdate(List<String> options) {
         if (!currentDataUsed) {
             listener.onCellsChanged(getCells());
         } else {

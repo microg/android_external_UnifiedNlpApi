@@ -44,19 +44,25 @@ public abstract class GeocoderBackendService extends AbstractBackendService {
     /**
      * @param locale The locale, formatted as a String with underscore (eg. en_US) the resulting
      *               address should be localized in
+     * @param options The options to put additional request parameters for geocoder backend
+     *   (ex. cacheLocation - get the address from cache when available). Format of parameters can be
+     *   just the name of requested option (ex. "cacheLocation") or parameter with value (ex. "cacheLocation=true")
      * @see android.location.Geocoder#getFromLocation(double, double, int)
      */
     protected abstract List<Address> getFromLocation(double latitude, double longitude,
-            int maxResults, String locale);
+            int maxResults, String locale, List<String> options);
 
     /**
      * @param locale The locale, formatted as a String with underscore (eg. en_US) the resulting
      *               address should be localized in
+     * @param options The options to put additional request parameters for geocoder backend
+     *   (ex. cacheLocation - get the address from cache when available). Format of parameters can be
+     *   just the name of requested option (ex. "cacheLocation") or parameter with value (ex. "cacheLocation=true")
      * @see android.location.Geocoder#getFromLocationName(String, int, double, double, double, double)
      */
     protected abstract List<Address> getFromLocationName(String locationName, int maxResults,
             double lowerLeftLatitude, double lowerLeftLongitude, double upperRightLatitude,
-            double upperRightLongitude, String locale);
+            double upperRightLongitude, String locale, List<String> options);
 
     private class Backend extends GeocoderBackend.Stub {
 
@@ -68,18 +74,18 @@ public abstract class GeocoderBackendService extends AbstractBackendService {
 
         @Override
         public List<Address> getFromLocation(double latitude, double longitude, int maxResults,
-                String locale) throws RemoteException {
+                String locale, List<String> options) throws RemoteException {
             return GeocoderBackendService.this
-                    .getFromLocation(latitude, longitude, maxResults, locale);
+                    .getFromLocation(latitude, longitude, maxResults, locale, options);
         }
 
         @Override
         public List<Address> getFromLocationName(String locationName, int maxResults,
                 double lowerLeftLatitude, double lowerLeftLongitude, double upperRightLatitude,
-                double upperRightLongitude, String locale) throws RemoteException {
+                double upperRightLongitude, String locale, List<String> options) throws RemoteException {
             return GeocoderBackendService.this
                     .getFromLocationName(locationName, maxResults, lowerLeftLatitude,
-                            lowerLeftLongitude, upperRightLatitude, upperRightLongitude, locale);
+                            lowerLeftLongitude, upperRightLatitude, upperRightLongitude, locale, options);
         }
 
         @Override

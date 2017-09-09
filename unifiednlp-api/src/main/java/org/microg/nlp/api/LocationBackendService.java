@@ -20,6 +20,7 @@ import android.content.Intent;
 import android.location.Location;
 import android.os.IBinder;
 import android.os.RemoteException;
+import java.util.List;
 
 public abstract class LocationBackendService extends AbstractBackendService {
 
@@ -35,9 +36,12 @@ public abstract class LocationBackendService extends AbstractBackendService {
      * <p/>
      * You can completely ignore this method (means returning null) if you use {@link #report(android.location.Location)}.
      *
+     * @param options The options to put additional request parameters for location backend
+     *   (ex. locationSource - sendlocation source with location). Format of parameters can be
+     *   just the name of requested option (ex. "locationSource") or parameter with value (ex. "locationSource=true")
      * @return a new {@link android.location.Location} instance or null if not available.
      */
-    protected Location update() {
+    protected Location update(List<String> options) {
         return null;
     }
 
@@ -94,8 +98,8 @@ public abstract class LocationBackendService extends AbstractBackendService {
         }
 
         @Override
-        public Location update() throws RemoteException {
-            return LocationBackendService.this.update();
+        public Location update(List<String> options) throws RemoteException {
+            return LocationBackendService.this.update(options);
         }
 
         @Override
