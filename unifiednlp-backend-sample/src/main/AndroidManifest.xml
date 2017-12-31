@@ -21,9 +21,6 @@
 	android:versionName="0.0.1"
 	xmlns:android="http://schemas.android.com/apk/res/android">
 
-	<uses-sdk
-		android:targetSdkVersion="24"
-		android:minSdkVersion="9" />
 	<application
 		android:allowBackup="false"
 		android:icon="@drawable/icon"

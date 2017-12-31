@@ -65,7 +65,7 @@ public class WiFiBackendHelper extends AbstractBackendHelper {
         if (listener == null)
             throw new IllegalArgumentException("listener must not be null");
         this.listener = listener;
-        this.wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        this.wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
     }
 
     /**

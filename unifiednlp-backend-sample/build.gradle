@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-buildscript {
-    repositories {
-        mavenCentral()
-        jcenter()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:2.2.2'
-    }
-}
-
 apply plugin: 'com.android.application'
 
 dependencies {
-    compile project(':unifiednlp-api')
+    implementation project(':unifiednlp-api')
 }
 
 android {
     compileSdkVersion androidCompileSdk()
     buildToolsVersion "$androidBuildVersionTools"
+
+    defaultConfig {
+        minSdkVersion androidMinSdk()
+        targetSdkVersion androidTargetSdk()
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
