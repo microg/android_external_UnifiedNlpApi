@@ -271,6 +271,7 @@ public class CellBackendHelper extends AbstractBackendHelper {
         return null;
     }
 
+    @SuppressWarnings("deprecation")
     private synchronized boolean loadCells(List<CellInfo> cellInfo) {
         cells.clear();
         currentDataUsed = false;
@@ -351,6 +352,7 @@ public class CellBackendHelper extends AbstractBackendHelper {
         }
     }
 
+    @SuppressWarnings("deprecation")
     private synchronized void fallbackScan() {
         if (lastScan + MIN_UPDATE_INTERVAL > System.currentTimeMillis()) return;
         List<CellInfo> allCellInfo = telephonyManager.getAllCellInfo();
