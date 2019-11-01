@@ -185,6 +185,54 @@ public class CellBackendHelper extends AbstractBackendHelper {
     }
 
     /**
+     * This will fix empty MNC since Android 9 with 0-prefixed MNCs.
+     * Issue: https://issuetracker.google.com/issues/113560852
+     */
+    private void fixEmptyMnc(List<CellInfo> cellInfo) {
+        if (Build.VERSION.SDK_INT < 28 || cellInfo == null) {
+            return;
+        }
+
+        String networkOperator = telephonyManager.getNetworkOperator();
+
+        if (networkOperator.length() < 5 || networkOperator.charAt(3) != '0') {
+            return;
+        }
+
+        String mnc = networkOperator.substring(3);
+
+        for (CellInfo info : cellInfo) {
+            if (!info.isRegistered()) {
+                continue;
+            }
+
+            Object identity = null;
+
+            if (info instanceof CellInfoGsm) {
+                identity = ((CellInfoGsm) info).getCellIdentity();
+            } else if (info instanceof CellInfoWcdma) {
+                identity = ((CellInfoWcdma) info).getCellIdentity();
+            } else if (info instanceof CellInfoLte) {
+                identity = ((CellInfoLte) info).getCellIdentity();
+            }
+
+            if (identity == null) {
+                continue;
+            }
+
+            try {
+                Field mncField = identity.getClass().getSuperclass().getDeclaredField("mMncStr");
+                mncField.setAccessible(true);
+                if (mncField.get(identity) == null) {
+                    mncField.set(identity, mnc);
+                }
+            } catch (NoSuchFieldException | IllegalAccessException ignored) {
+
+            }
+        }
+    }
+
+    /**
      * This will fix values returned by {@link TelephonyManager#getAllCellInfo()} as described
      * here: https://github.com/mozilla/ichnaea/issues/340
      */
@@ -277,6 +325,7 @@ public class CellBackendHelper extends AbstractBackendHelper {
         currentDataUsed = false;
         try {
             if (cellInfo != null) {
+                fixEmptyMnc(cellInfo);
                 fixAllCellInfo(cellInfo);
                 for (CellInfo info : cellInfo) {
                     Cell cell = parseCellInfo(info);
